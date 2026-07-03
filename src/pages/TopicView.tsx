@@ -23,6 +23,7 @@ import PostBookmarkButton from "@/components/PostBookmarkButton";
 import ShareButton from "@/components/ShareButton";
 import ReadingProgress from "@/components/ReadingProgress";
 import { use2FAGuard } from "@/hooks/use2FAGuard";
+import { useActiveBrand } from "@/hooks/useActiveBrand";
 import BannedUserBadge from "@/components/BannedUserBadge";
 import BannedUserInlineBadge from "@/components/BannedUserInlineBadge";
 import HiddenContentBanner from "@/components/HiddenContentBanner";
