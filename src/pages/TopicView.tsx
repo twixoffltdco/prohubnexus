@@ -207,6 +207,7 @@ const TopicView = () => {
         topic_id: id,
         user_id: user.id,
         content: newPost.trim(),
+        author_brand_id: activeBrandId || null,
       });
 
       if (error) throw error;
