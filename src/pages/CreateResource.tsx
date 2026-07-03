@@ -137,6 +137,7 @@ const CreateResource = () => {
           url: uploadType === "url" ? url : null,
           file_url: fileUrl,
           resource_type: resourceType,
+          author_brand_id: activeBrandId || null,
         });
 
       if (error) throw error;
