@@ -65,6 +65,7 @@ import SubForumCreateTopic from "./pages/SubForumCreateTopic";
 import SubForumSearchPage from "./pages/SubForumSearchPage";
 import AuthHandoff from "./pages/AuthHandoff";
 import BrandAccounts from "./pages/BrandAccounts";
+import BrandDirectory from "./pages/BrandDirectory";
 import BrandProfile from "./pages/BrandProfile";
 import BusinessLanding from "./pages/BusinessLanding";
 import RandomTopic from "./pages/RandomTopic";
