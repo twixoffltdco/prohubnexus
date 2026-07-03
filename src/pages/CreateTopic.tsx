@@ -18,6 +18,7 @@ import { useToast } from "@/hooks/use-toast";
 import { topicSchema } from "@/lib/schemas";
 import { use2FAGuard } from "@/hooks/use2FAGuard";
 import BBCodeToolbar from "@/components/BBCodeToolbar";
+import { useActiveBrand } from "@/hooks/useActiveBrand";
 
 const CreateTopic = () => {
   const [user, setUser] = useState<any>(null);
