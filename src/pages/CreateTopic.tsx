@@ -18,6 +18,7 @@ import { useToast } from "@/hooks/use-toast";
 import { topicSchema } from "@/lib/schemas";
 import { use2FAGuard } from "@/hooks/use2FAGuard";
 import BBCodeToolbar from "@/components/BBCodeToolbar";
+import { useActiveBrand } from "@/hooks/useActiveBrand";
 
 const CreateTopic = () => {
   const [user, setUser] = useState<any>(null);
@@ -30,6 +31,7 @@ const CreateTopic = () => {
   const { toast } = useToast();
   const [searchParams] = useSearchParams();
   const { check2FA } = use2FAGuard();
+  const { activeBrandId } = useActiveBrand();
 
   useEffect(() => {
     supabase.auth.getSession().then(({ data: { session } }) => {
@@ -127,6 +129,7 @@ const CreateTopic = () => {
           user_id: user.id,
           title: title.trim(),
           content: content.trim(),
+          author_brand_id: activeBrandId || null,
         })
         .select()
         .single();

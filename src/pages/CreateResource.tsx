@@ -19,6 +19,7 @@ import { useToast } from "@/hooks/use-toast";
 import { resourceSchema } from "@/lib/schemas";
 import { Upload, Link2 } from "lucide-react";
 import { use2FAGuard } from "@/hooks/use2FAGuard";
+import { useActiveBrand } from "@/hooks/useActiveBrand";
 
 const CreateResource = () => {
   const [user, setUser] = useState<any>(null);
@@ -32,6 +33,7 @@ const CreateResource = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
   const { check2FA } = use2FAGuard();
+  const { activeBrandId } = useActiveBrand();
 
   useEffect(() => {
     supabase.auth.getSession().then(({ data: { session } }) => {
@@ -135,6 +137,7 @@ const CreateResource = () => {
           url: uploadType === "url" ? url : null,
           file_url: fileUrl,
           resource_type: resourceType,
+          author_brand_id: activeBrandId || null,
         });
 
       if (error) throw error;

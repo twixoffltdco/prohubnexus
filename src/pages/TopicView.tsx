@@ -23,6 +23,7 @@ import PostBookmarkButton from "@/components/PostBookmarkButton";
 import ShareButton from "@/components/ShareButton";
 import ReadingProgress from "@/components/ReadingProgress";
 import { use2FAGuard } from "@/hooks/use2FAGuard";
+import { useActiveBrand } from "@/hooks/useActiveBrand";
 import BannedUserBadge from "@/components/BannedUserBadge";
 import BannedUserInlineBadge from "@/components/BannedUserInlineBadge";
 import HiddenContentBanner from "@/components/HiddenContentBanner";
@@ -54,6 +55,7 @@ const TopicView = () => {
   const { toast } = useToast();
   const { trackInterest } = useInterestTracking(user?.id);
   const { check2FA } = use2FAGuard();
+  const { activeBrandId } = useActiveBrand();
   const { isAdmin, isModerator, canModerateTopics } = useUserRole();
   const canMod = isAdmin || (isModerator && canModerateTopics);
 
@@ -205,6 +207,7 @@ const TopicView = () => {
         topic_id: id,
         user_id: user.id,
         content: newPost.trim(),
+        author_brand_id: activeBrandId || null,
       });
 
       if (error) throw error;

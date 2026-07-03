@@ -42,6 +42,7 @@ const FlexDevResources = () => {
         const { data } = await supabase
           .from("resources")
           .select("id, title, description, resource_type, url, file_url, downloads, rating, created_at, user_id, profiles(username, username_css)")
+          .eq("forum_id", "flexdev" as any)
           .eq("is_hidden", false)
           .order("created_at", { ascending: false });
 
@@ -68,8 +69,8 @@ const FlexDevResources = () => {
       <main className="container mx-auto px-4 py-6">
         <div className="mb-6 flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
           <div>
-            <h1 className="text-xl font-bold text-white md:text-2xl">Ресурсы Code Forum</h1>
-            <p className="text-sm text-gray-400">Ресурсы ProHub в оболочке Code Forum и стиле XenForo.</p>
+            <h1 className="text-xl font-bold text-white md:text-2xl">Ресурсы FlexDev</h1>
+            <p className="text-sm text-gray-400">Инструменты и материалы FlexDev — только для этого форума.</p>
           </div>
 
           <div className="flex flex-wrap gap-2">

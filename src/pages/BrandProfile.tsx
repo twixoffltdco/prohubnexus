@@ -32,6 +32,8 @@ export default function BrandProfile() {
   const [brand, setBrand] = useState<Brand | null>(null);
   const [loading, setLoading] = useState(true);
   const [me, setMe] = useState<any>(null);
+  const [brandTopics, setBrandTopics] = useState<any[]>([]);
+  const [brandResources, setBrandResources] = useState<any[]>([]);
   const { setActiveBrandId, activeBrandId } = useActiveBrand();
 
   useEffect(() => {
@@ -49,6 +51,13 @@ export default function BrandProfile() {
       }
       setBrand(data as Brand);
       setLoading(false);
+
+      const [{ data: tps }, { data: rs }] = await Promise.all([
+        (supabase.from("topics") as any).select("id,title,created_at,views").eq("author_brand_id", data.id).eq("is_hidden", false).order("created_at", { ascending: false }).limit(20),
+        (supabase.from("resources") as any).select("id,title,description,created_at,downloads,rating").eq("author_brand_id", data.id).eq("is_hidden", false).order("created_at", { ascending: false }).limit(20),
+      ]);
+      setBrandTopics(tps || []);
+      setBrandResources(rs || []);
 
       // Increment views (throttled)
       let viewerKey = localStorage.getItem("viewer_key");
@@ -146,6 +155,44 @@ export default function BrandProfile() {
             </div>
           </CardContent>
         </Card>
+
+        <div className="grid gap-4 md:grid-cols-2 mt-6">
+          <Card>
+            <CardContent className="p-4">
+              <h2 className="font-semibold mb-3 flex items-center gap-2"><Building2 className="h-4 w-4" /> Темы от бренда</h2>
+              {brandTopics.length === 0 ? (
+                <p className="text-sm text-muted-foreground">Пока нет тем, опубликованных от лица бренда.</p>
+              ) : (
+                <ul className="space-y-2">
+                  {brandTopics.map((t) => (
+                    <li key={t.id}>
+                      <Link to={`/topic/${t.id}`} className="text-sm hover:underline block truncate">{t.title}</Link>
+                      <div className="text-xs text-muted-foreground">{new Date(t.created_at).toLocaleDateString("ru-RU")} · {t.views ?? 0} просмотров</div>
+                    </li>
+                  ))}
+                </ul>
+              )}
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardContent className="p-4">
+              <h2 className="font-semibold mb-3 flex items-center gap-2"><Building2 className="h-4 w-4" /> Ресурсы от бренда</h2>
+              {brandResources.length === 0 ? (
+                <p className="text-sm text-muted-foreground">Пока нет ресурсов от бренда.</p>
+              ) : (
+                <ul className="space-y-2">
+                  {brandResources.map((r) => (
+                    <li key={r.id}>
+                      <Link to={`/resource/${r.id}`} className="text-sm hover:underline block truncate">{r.title}</Link>
+                      <div className="text-xs text-muted-foreground">★ {(r.rating || 0).toFixed(1)} · {r.downloads || 0} загрузок</div>
+                    </li>
+                  ))}
+                </ul>
+              )}
+            </CardContent>
+          </Card>
+        </div>
 
         <p className="text-xs text-muted-foreground text-center mt-6">
           Бренд-аккаунт. Никнейм не сбрасывается. <Link to="/business" className="text-primary hover:underline">Узнать больше →</Link>
