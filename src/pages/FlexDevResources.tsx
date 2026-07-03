@@ -42,6 +42,7 @@ const FlexDevResources = () => {
         const { data } = await supabase
           .from("resources")
           .select("id, title, description, resource_type, url, file_url, downloads, rating, created_at, user_id, profiles(username, username_css)")
+          .eq("forum_id", "flexdev" as any)
           .eq("is_hidden", false)
           .order("created_at", { ascending: false });
 
