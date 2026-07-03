@@ -10,6 +10,7 @@ import PluginRunner from "@/components/PluginRunner";
 import SeasonalCountdown from "@/components/SeasonalCountdown";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
+import RSSFeed from "@/components/RSSFeed";
 import { MessageSquare, Eye, Plus } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { useNotifications } from "@/hooks/useNotifications";
