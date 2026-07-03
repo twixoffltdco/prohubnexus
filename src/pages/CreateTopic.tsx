@@ -31,6 +31,7 @@ const CreateTopic = () => {
   const { toast } = useToast();
   const [searchParams] = useSearchParams();
   const { check2FA } = use2FAGuard();
+  const { activeBrandId } = useActiveBrand();
 
   useEffect(() => {
     supabase.auth.getSession().then(({ data: { session } }) => {
