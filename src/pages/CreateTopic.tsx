@@ -129,6 +129,7 @@ const CreateTopic = () => {
           user_id: user.id,
           title: title.trim(),
           content: content.trim(),
+          author_brand_id: activeBrandId || null,
         })
         .select()
         .single();
