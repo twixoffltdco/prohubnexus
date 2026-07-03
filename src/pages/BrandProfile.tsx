@@ -32,6 +32,8 @@ export default function BrandProfile() {
   const [brand, setBrand] = useState<Brand | null>(null);
   const [loading, setLoading] = useState(true);
   const [me, setMe] = useState<any>(null);
+  const [brandTopics, setBrandTopics] = useState<any[]>([]);
+  const [brandResources, setBrandResources] = useState<any[]>([]);
   const { setActiveBrandId, activeBrandId } = useActiveBrand();
 
   useEffect(() => {
@@ -49,6 +51,13 @@ export default function BrandProfile() {
       }
       setBrand(data as Brand);
       setLoading(false);
+
+      const [{ data: tps }, { data: rs }] = await Promise.all([
+        supabase.from("topics").select("id,title,created_at,views").eq("author_brand_id" as any, data.id).eq("is_hidden", false).order("created_at", { ascending: false }).limit(20),
+        supabase.from("resources").select("id,title,description,created_at,downloads,rating").eq("author_brand_id" as any, data.id).eq("is_hidden", false).order("created_at", { ascending: false }).limit(20),
+      ]);
+      setBrandTopics(tps || []);
+      setBrandResources(rs || []);
 
       // Increment views (throttled)
       let viewerKey = localStorage.getItem("viewer_key");
