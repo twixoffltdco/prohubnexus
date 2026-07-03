@@ -33,6 +33,7 @@ const CreateResource = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
   const { check2FA } = use2FAGuard();
+  const { activeBrandId } = useActiveBrand();
 
   useEffect(() => {
     supabase.auth.getSession().then(({ data: { session } }) => {
