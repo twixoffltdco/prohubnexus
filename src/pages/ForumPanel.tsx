@@ -136,7 +136,8 @@ const Forum = () => {
             <h1 className="text-2xl md:text-4xl font-bold mb-1 md:mb-2">ProHub Форум</h1>
             <p className="text-sm md:text-base text-muted-foreground">Сообщество разработчиков и профессионалов</p>
           </div>
-          <div className="flex gap-2">
+          <div className="flex gap-2 flex-wrap">
+            <RSSFeed />
             {user && (
               <>
                 <Button onClick={() => navigate("/create-ad")} variant="outline" size="sm" className="text-xs md:text-sm">
