@@ -19,6 +19,7 @@ import { useToast } from "@/hooks/use-toast";
 import { resourceSchema } from "@/lib/schemas";
 import { Upload, Link2 } from "lucide-react";
 import { use2FAGuard } from "@/hooks/use2FAGuard";
+import { useActiveBrand } from "@/hooks/useActiveBrand";
 
 const CreateResource = () => {
   const [user, setUser] = useState<any>(null);
