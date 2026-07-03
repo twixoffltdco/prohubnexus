@@ -55,6 +55,7 @@ const TopicView = () => {
   const { toast } = useToast();
   const { trackInterest } = useInterestTracking(user?.id);
   const { check2FA } = use2FAGuard();
+  const { activeBrandId } = useActiveBrand();
   const { isAdmin, isModerator, canModerateTopics } = useUserRole();
   const canMod = isAdmin || (isModerator && canModerateTopics);
 
