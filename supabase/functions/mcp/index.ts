@@ -21,8 +21,8 @@ var search_topics_default = defineTool({
   annotations: { readOnlyHint: true, idempotentHint: true, openWorldHint: false },
   handler: async ({ query, forum_id, limit }) => {
     const supabase = createClient(
-      process.env.SUPABASE_URL,
-      process.env.SUPABASE_PUBLISHABLE_KEY,
+      globalThis.process.env.SUPABASE_URL,
+      globalThis.process.env.SUPABASE_PUBLISHABLE_KEY,
       { auth: { persistSession: false, autoRefreshToken: false } }
     );
     let q = supabase.from("topics").select("id, title, forum_id, category_id, user_id, views, created_at").eq("is_hidden", false).ilike("title", `%${query}%`).order("created_at", { ascending: false }).limit(limit ?? 20);
@@ -52,8 +52,8 @@ var get_topic_default = defineTool2({
   annotations: { readOnlyHint: true, idempotentHint: true, openWorldHint: false },
   handler: async ({ topic_id, post_limit }) => {
     const supabase = createClient2(
-      process.env.SUPABASE_URL,
-      process.env.SUPABASE_PUBLISHABLE_KEY,
+      globalThis.process.env.SUPABASE_URL,
+      globalThis.process.env.SUPABASE_PUBLISHABLE_KEY,
       { auth: { persistSession: false, autoRefreshToken: false } }
     );
     const { data: topic, error: te } = await supabase.from("topics").select("id, title, content, forum_id, category_id, user_id, views, created_at, is_hidden").eq("id", topic_id).maybeSingle();
@@ -82,8 +82,8 @@ var list_categories_default = defineTool3({
   annotations: { readOnlyHint: true, idempotentHint: true, openWorldHint: false },
   handler: async ({ forum_id }) => {
     const supabase = createClient3(
-      process.env.SUPABASE_URL,
-      process.env.SUPABASE_PUBLISHABLE_KEY,
+      globalThis.process.env.SUPABASE_URL,
+      globalThis.process.env.SUPABASE_PUBLISHABLE_KEY,
       { auth: { persistSession: false, autoRefreshToken: false } }
     );
     let q = supabase.from("categories").select("*").order("position", { ascending: true });
@@ -113,8 +113,8 @@ var list_resources_default = defineTool4({
   annotations: { readOnlyHint: true, idempotentHint: true, openWorldHint: false },
   handler: async ({ forum_id, query, limit }) => {
     const supabase = createClient4(
-      process.env.SUPABASE_URL,
-      process.env.SUPABASE_PUBLISHABLE_KEY,
+      globalThis.process.env.SUPABASE_URL,
+      globalThis.process.env.SUPABASE_PUBLISHABLE_KEY,
       { auth: { persistSession: false, autoRefreshToken: false } }
     );
     let q = supabase.from("resources").select("id, title, description, forum_id, user_id, downloads, created_at").eq("is_hidden", false).order("created_at", { ascending: false }).limit(limit ?? 20);
@@ -142,8 +142,8 @@ var get_me_default = defineTool5({
     if (!ctx.isAuthenticated())
       return { content: [{ type: "text", text: "Not authenticated" }], isError: true };
     const supabase = createClient5(
-      process.env.SUPABASE_URL,
-      process.env.SUPABASE_PUBLISHABLE_KEY,
+      globalThis.process.env.SUPABASE_URL,
+      globalThis.process.env.SUPABASE_PUBLISHABLE_KEY,
       {
         global: { headers: { Authorization: `Bearer ${ctx.getToken()}` } },
         auth: { persistSession: false, autoRefreshToken: false }
@@ -179,8 +179,8 @@ var create_post_default = defineTool6({
     if (!ctx.isAuthenticated())
       return { content: [{ type: "text", text: "Not authenticated" }], isError: true };
     const supabase = createClient6(
-      process.env.SUPABASE_URL,
-      process.env.SUPABASE_PUBLISHABLE_KEY,
+      globalThis.process.env.SUPABASE_URL,
+      globalThis.process.env.SUPABASE_PUBLISHABLE_KEY,
       {
         global: { headers: { Authorization: `Bearer ${ctx.getToken()}` } },
         auth: { persistSession: false, autoRefreshToken: false }

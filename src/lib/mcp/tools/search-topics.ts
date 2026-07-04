@@ -17,8 +17,8 @@ export default defineTool({
   annotations: { readOnlyHint: true, idempotentHint: true, openWorldHint: false },
   handler: async ({ query, forum_id, limit }) => {
     const supabase = createClient(
-      process.env.SUPABASE_URL!,
-      process.env.SUPABASE_PUBLISHABLE_KEY!,
+      (globalThis as any).process.env.SUPABASE_URL as string,
+      (globalThis as any).process.env.SUPABASE_PUBLISHABLE_KEY as string,
       { auth: { persistSession: false, autoRefreshToken: false } },
     );
     let q = supabase
