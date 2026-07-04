@@ -69,6 +69,7 @@ import BrandDirectory from "./pages/BrandDirectory";
 import BrandProfile from "./pages/BrandProfile";
 import BusinessLanding from "./pages/BusinessLanding";
 import RandomTopic from "./pages/RandomTopic";
+import OAuthConsent from "./pages/OAuthConsent";
 import ChangelogModal from "./components/ChangelogModal";
 import PluginRunner from "./components/PluginRunner";
 import OinkGramBanner from "./components/OinkGramBanner";
@@ -106,6 +107,7 @@ const AppLayout = ({ user }: { user: any }) => {
 
         <Routes>
           <Route path="/" element={<Landing />} />
+          <Route path="/.lovable/oauth/consent" element={<OAuthConsent />} />
           <Route path="/forum" element={<ForumPanel />} />
           <Route path="/auth" element={<Auth />} />
           <Route path="/auth/handoff" element={<AuthHandoff />} />
