@@ -300,14 +300,22 @@ const Auth = () => {
     }
   };
 
+  const getSafeNext = (): string => {
+    const params = new URLSearchParams(window.location.search);
+    const raw = params.get("next");
+    if (!raw || !raw.startsWith("/") || raw.startsWith("//")) return "/";
+    return raw;
+  };
+
   const handle2FASetupComplete = () => {
     toast({ title: "2FA настроен успешно!" });
-    navigate("/");
+    navigate(getSafeNext());
   };
 
   const handle2FAVerifySuccess = () => {
-    navigate("/");
+    navigate(getSafeNext());
   };
+
 
   const handle2FACancel = () => {
     setAuthStep("login");
