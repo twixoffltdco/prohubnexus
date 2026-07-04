@@ -1,0 +1,200 @@
+{
+  "version": 1,
+  "sdk_version": "0.20.0",
+  "path": "/functions/v1/mcp",
+  "auth": {
+    "type": "oauth",
+    "issuer": "https://fkveoqzztgwdeayaqixv.supabase.co/auth/v1",
+    "accepted_audiences": [
+      "authenticated"
+    ]
+  },
+  "mcp": {
+    "server": {
+      "name": "prohub-mcp",
+      "version": "0.1.0",
+      "title": "ProHub MCP"
+    },
+    "tools": [
+      {
+        "name": "search_topics",
+        "title": "Search topics",
+        "description": "Full-text search for forum topics across ProHub, Code Forum, and FlexDev.",
+        "annotations": {
+          "readOnlyHint": true,
+          "idempotentHint": true,
+          "openWorldHint": false
+        },
+        "inputSchema": {
+          "$schema": "http://json-schema.org/draft-07/schema#",
+          "type": "object",
+          "properties": {
+            "query": {
+              "type": "string",
+              "minLength": 1,
+              "description": "Search text matched against topic titles."
+            },
+            "forum_id": {
+              "description": "Restrict results to a specific forum.",
+              "type": "string",
+              "enum": [
+                "prohub",
+                "codeforum",
+                "flexdev"
+              ]
+            },
+            "limit": {
+              "description": "Max results (default 20).",
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 50
+            }
+          },
+          "required": [
+            "query"
+          ]
+        },
+        "outputSchema": null
+      },
+      {
+        "name": "get_topic",
+        "title": "Get topic",
+        "description": "Fetch a topic with its posts by topic ID.",
+        "annotations": {
+          "readOnlyHint": true,
+          "idempotentHint": true,
+          "openWorldHint": false
+        },
+        "inputSchema": {
+          "$schema": "http://json-schema.org/draft-07/schema#",
+          "type": "object",
+          "properties": {
+            "topic_id": {
+              "type": "string",
+              "format": "uuid",
+              "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$",
+              "description": "Topic UUID."
+            },
+            "post_limit": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 100
+            }
+          },
+          "required": [
+            "topic_id"
+          ]
+        },
+        "outputSchema": null
+      },
+      {
+        "name": "list_categories",
+        "title": "List categories",
+        "description": "List forum categories for ProHub, Code Forum, or FlexDev.",
+        "annotations": {
+          "readOnlyHint": true,
+          "idempotentHint": true,
+          "openWorldHint": false
+        },
+        "inputSchema": {
+          "$schema": "http://json-schema.org/draft-07/schema#",
+          "type": "object",
+          "properties": {
+            "forum_id": {
+              "description": "Filter by forum (defaults to all).",
+              "type": "string",
+              "enum": [
+                "prohub",
+                "codeforum",
+                "flexdev"
+              ]
+            }
+          }
+        },
+        "outputSchema": null
+      },
+      {
+        "name": "list_resources",
+        "title": "List resources",
+        "description": "List published resources (guides, tools, downloads) on the platform.",
+        "annotations": {
+          "readOnlyHint": true,
+          "idempotentHint": true,
+          "openWorldHint": false
+        },
+        "inputSchema": {
+          "$schema": "http://json-schema.org/draft-07/schema#",
+          "type": "object",
+          "properties": {
+            "forum_id": {
+              "type": "string",
+              "enum": [
+                "prohub",
+                "codeforum",
+                "flexdev"
+              ]
+            },
+            "query": {
+              "description": "Optional title filter.",
+              "type": "string"
+            },
+            "limit": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 50
+            }
+          }
+        },
+        "outputSchema": null
+      },
+      {
+        "name": "get_me",
+        "title": "Get my profile",
+        "description": "Return the signed-in user's profile (username, reputation, roles).",
+        "annotations": {
+          "readOnlyHint": true,
+          "idempotentHint": true,
+          "openWorldHint": false
+        },
+        "inputSchema": {
+          "$schema": "http://json-schema.org/draft-07/schema#",
+          "type": "object",
+          "properties": {}
+        },
+        "outputSchema": null
+      },
+      {
+        "name": "create_post",
+        "title": "Reply to a topic",
+        "description": "Post a reply in a forum topic as the signed-in user.",
+        "annotations": {
+          "readOnlyHint": false,
+          "destructiveHint": false,
+          "openWorldHint": false
+        },
+        "inputSchema": {
+          "$schema": "http://json-schema.org/draft-07/schema#",
+          "type": "object",
+          "properties": {
+            "topic_id": {
+              "type": "string",
+              "format": "uuid",
+              "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$",
+              "description": "Topic UUID to reply in."
+            },
+            "content": {
+              "type": "string",
+              "minLength": 1,
+              "description": "Reply body (BBCode/text)."
+            }
+          },
+          "required": [
+            "topic_id",
+            "content"
+          ]
+        },
+        "outputSchema": null
+      }
+    ]
+  }
+}
