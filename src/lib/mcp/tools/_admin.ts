@@ -12,40 +12,33 @@ export function mcpClient(ctx?: ToolContext) {
   );
 }
 
+export type McpDenied = { content: { type: "text"; text: string }[]; isError: true };
+
 /**
- * Ensures the caller is authenticated AND has the 'admin' role.
- * Returns a text error object usable as a tool response when denied.
+ * Returns null when the caller is an admin. Otherwise returns a tool-error object
+ * to be returned directly from the handler.
  */
-export async function requireAdmin(ctx: ToolContext): Promise<{ ok: true } | { ok: false; error: any }> {
+export async function requireAdmin(ctx: ToolContext): Promise<McpDenied | null> {
   if (!ctx.isAuthenticated()) {
     return {
-      ok: false,
-      error: {
-        content: [{ type: "text", text: "MCP доступ ограничен: требуется авторизация." }],
-        isError: true,
-      },
+      content: [{ type: "text", text: "MCP доступ ограничен: требуется авторизация." }],
+      isError: true,
     };
   }
   const supabase = mcpClient(ctx);
-  const { data, error } = await supabase
+  const { data } = await supabase
     .from("user_roles")
     .select("role")
     .eq("user_id", ctx.getUserId())
     .eq("role", "admin")
     .maybeSingle();
-  if (error || !data) {
+  if (!data) {
     return {
-      ok: false,
-      error: {
-        content: [
-          {
-            type: "text",
-            text: "MCP-сервер ProHub доступен только администраторам платформы.",
-          },
-        ],
-        isError: true,
-      },
+      content: [
+        { type: "text", text: "MCP-сервер ProHub доступен только администраторам платформы." },
+      ],
+      isError: true,
     };
   }
-  return { ok: true };
+  return null;
 }

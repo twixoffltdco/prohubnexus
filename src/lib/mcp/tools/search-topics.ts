@@ -16,8 +16,8 @@ export default defineTool({
   },
   annotations: { readOnlyHint: true, idempotentHint: true, openWorldHint: false },
   handler: async ({ query, forum_id, limit }, ctx: ToolContext) => {
-    const gate = await requireAdmin(ctx);
-    if (!gate.ok) return gate.error;
+    const denied = await requireAdmin(ctx);
+    if (denied) return denied;
     const supabase = mcpClient(ctx);
     let q = supabase
       .from("topics")
