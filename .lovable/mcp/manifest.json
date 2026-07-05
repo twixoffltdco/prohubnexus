@@ -19,7 +19,7 @@
       {
         "name": "search_topics",
         "title": "Search topics",
-        "description": "Full-text search for forum topics across ProHub, Code Forum, and FlexDev.",
+        "description": "Full-text search for forum topics across ProHub, Code Forum, and FlexDev. Admin-only.",
         "annotations": {
           "readOnlyHint": true,
           "idempotentHint": true,

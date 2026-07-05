@@ -6,30 +6,73 @@
 import { auth, defineMcp } from "npm:@lovable.dev/mcp-js@0.20.0";
 
 // src/lib/mcp/tools/search-topics.ts
-import { createClient } from "npm:@supabase/supabase-js@^2.81.1";
 import { defineTool } from "npm:@lovable.dev/mcp-js@0.20.0";
 import { z } from "npm:zod@^4.4.3";
+
+// src/lib/mcp/tools/_admin.ts
+import { createClient } from "npm:@supabase/supabase-js@^2.81.1";
+function mcpClient(ctx) {
+  return createClient(
+    globalThis.process.env.SUPABASE_URL,
+    globalThis.process.env.SUPABASE_PUBLISHABLE_KEY,
+    {
+      global: ctx?.getToken ? { headers: { Authorization: `Bearer ${ctx.getToken()}` } } : void 0,
+      auth: { persistSession: false, autoRefreshToken: false }
+    }
+  );
+}
+async function requireAdmin(ctx) {
+  if (!ctx.isAuthenticated()) {
+    return {
+      ok: false,
+      error: {
+        content: [{ type: "text", text: "MCP \u0434\u043E\u0441\u0442\u0443\u043F \u043E\u0433\u0440\u0430\u043D\u0438\u0447\u0435\u043D: \u0442\u0440\u0435\u0431\u0443\u0435\u0442\u0441\u044F \u0430\u0432\u0442\u043E\u0440\u0438\u0437\u0430\u0446\u0438\u044F." }],
+        isError: true
+      }
+    };
+  }
+  const supabase = mcpClient(ctx);
+  const { data, error } = await supabase.from("user_roles").select("role").eq("user_id", ctx.getUserId()).eq("role", "admin").maybeSingle();
+  if (error || !data) {
+    return {
+      ok: false,
+      error: {
+        content: [
+          {
+            type: "text",
+            text: "MCP-\u0441\u0435\u0440\u0432\u0435\u0440 ProHub \u0434\u043E\u0441\u0442\u0443\u043F\u0435\u043D \u0442\u043E\u043B\u044C\u043A\u043E \u0430\u0434\u043C\u0438\u043D\u0438\u0441\u0442\u0440\u0430\u0442\u043E\u0440\u0430\u043C \u043F\u043B\u0430\u0442\u0444\u043E\u0440\u043C\u044B."
+          }
+        ],
+        isError: true
+      }
+    };
+  }
+  return { ok: true };
+}
+
+// src/lib/mcp/tools/search-topics.ts
 var search_topics_default = defineTool({
   name: "search_topics",
   title: "Search topics",
-  description: "Full-text search for forum topics across ProHub, Code Forum, and FlexDev.",
+  description: "Full-text search for forum topics across ProHub, Code Forum, and FlexDev. Admin-only.",
   inputSchema: {
     query: z.string().min(1).describe("Search text matched against topic titles."),
     forum_id: z.enum(["prohub", "codeforum", "flexdev"]).optional().describe("Restrict results to a specific forum."),
     limit: z.number().int().min(1).max(50).optional().describe("Max results (default 20).")
   },
   annotations: { readOnlyHint: true, idempotentHint: true, openWorldHint: false },
-  handler: async ({ query, forum_id, limit }) => {
-    const supabase = createClient(
-      globalThis.process.env.SUPABASE_URL,
-      globalThis.process.env.SUPABASE_PUBLISHABLE_KEY,
-      { auth: { persistSession: false, autoRefreshToken: false } }
-    );
-    let q = supabase.from("topics").select("id, title, forum_id, category_id, user_id, views, created_at").eq("is_hidden", false).ilike("title", `%${query}%`).order("created_at", { ascending: false }).limit(limit ?? 20);
-    if (forum_id) q = q.eq("forum_id", forum_id);
+  handler: async ({ query, forum_id, limit }, ctx) => {
+    const gate = await requireAdmin(ctx);
+    if (!gate.ok) return gate.error;
+    const supabase = mcpClient(ctx);
+    let q = supabase.from("topics").select("id, title, category_id, user_id, views, created_at").eq("is_hidden", false).ilike("title", `%${query}%`).order("created_at", { ascending: false }).limit(limit ?? 20);
+    if (forum_id) {
+      const { data: cats } = await supabase.from("categories").select("id").eq("forum_id", forum_id);
+      const ids = (cats || []).map((c) => c.id);
+      if (ids.length) q = q.in("category_id", ids);
+    }
     const { data, error } = await q;
-    if (error)
-      return { content: [{ type: "text", text: error.message }], isError: true };
+    if (error) return { content: [{ type: "text", text: error.message }], isError: true };
     return {
       content: [{ type: "text", text: JSON.stringify(data) }],
       structuredContent: { topics: data ?? [] }
