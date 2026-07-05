@@ -208,9 +208,9 @@ var create_post_default = defineTool6({
 var projectRef = "fkveoqzztgwdeayaqixv";
 var mcp_default = defineMcp({
   name: "prohub-mcp",
-  title: "ProHub MCP",
-  version: "0.1.0",
-  instructions: "Tools for the ProHub platform (ProHub, Code Forum, FlexDev). Read topics, categories, and resources without auth; sign in to fetch your profile or reply in topics.",
+  title: "ProHub MCP (Admin)",
+  version: "0.2.0",
+  instructions: "Admin-only MCP tools for the ProHub platform (ProHub, Code Forum, FlexDev). All tools require the caller to hold the 'admin' role in this app. Non-admins will receive an authorization error.",
   auth: auth.oauth.issuer({
     issuer: `https://${projectRef}.supabase.co/auth/v1`,
     acceptedAudiences: "authenticated"

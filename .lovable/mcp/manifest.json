@@ -12,8 +12,8 @@
   "mcp": {
     "server": {
       "name": "prohub-mcp",
-      "version": "0.1.0",
-      "title": "ProHub MCP"
+      "version": "0.2.0",
+      "title": "ProHub MCP (Admin)"
     },
     "tools": [
       {
