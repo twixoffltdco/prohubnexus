@@ -1,23 +1,16 @@
-import { createClient } from "@supabase/supabase-js";
 import { defineTool, type ToolContext } from "@lovable.dev/mcp-js";
+import { mcpClient, requireAdmin } from "./_admin";
 
 export default defineTool({
   name: "get_me",
   title: "Get my profile",
-  description: "Return the signed-in user's profile (username, reputation, roles).",
+  description: "Return the signed-in admin's profile (username, reputation, roles). Admin-only.",
   inputSchema: {},
   annotations: { readOnlyHint: true, idempotentHint: true, openWorldHint: false },
   handler: async (_input, ctx: ToolContext) => {
-    if (!ctx.isAuthenticated())
-      return { content: [{ type: "text", text: "Not authenticated" }], isError: true };
-    const supabase = createClient(
-      (globalThis as any).process.env.SUPABASE_URL as string,
-      (globalThis as any).process.env.SUPABASE_PUBLISHABLE_KEY as string,
-      {
-        global: { headers: { Authorization: `Bearer ${ctx.getToken()}` } },
-        auth: { persistSession: false, autoRefreshToken: false },
-      },
-    );
+    const denied = await requireAdmin(ctx);
+    if (denied) return denied;
+    const supabase = mcpClient(ctx);
     const userId = ctx.getUserId();
     const [{ data: profile }, { data: rep }, { data: roles }] = await Promise.all([
       supabase.from("profiles").select("*").eq("id", userId).maybeSingle(),

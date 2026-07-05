@@ -1,23 +1,21 @@
-import { createClient } from "@supabase/supabase-js";
-import { defineTool } from "@lovable.dev/mcp-js";
+import { defineTool, type ToolContext } from "@lovable.dev/mcp-js";
 import { z } from "zod";
+import { mcpClient, requireAdmin } from "./_admin";
 
 export default defineTool({
   name: "list_resources",
   title: "List resources",
-  description: "List published resources (guides, tools, downloads) on the platform.",
+  description: "List published resources (guides, tools, downloads). Admin-only.",
   inputSchema: {
     forum_id: z.enum(["prohub", "codeforum", "flexdev"]).optional(),
     query: z.string().optional().describe("Optional title filter."),
     limit: z.number().int().min(1).max(50).optional(),
   },
   annotations: { readOnlyHint: true, idempotentHint: true, openWorldHint: false },
-  handler: async ({ forum_id, query, limit }) => {
-    const supabase = createClient(
-      (globalThis as any).process.env.SUPABASE_URL as string,
-      (globalThis as any).process.env.SUPABASE_PUBLISHABLE_KEY as string,
-      { auth: { persistSession: false, autoRefreshToken: false } },
-    );
+  handler: async ({ forum_id, query, limit }, ctx: ToolContext) => {
+    const denied = await requireAdmin(ctx);
+    if (denied) return denied;
+    const supabase = mcpClient(ctx);
     let q = supabase
       .from("resources")
       .select("id, title, description, forum_id, user_id, downloads, created_at")

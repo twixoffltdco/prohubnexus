@@ -64,7 +64,7 @@ const CreateTopic = () => {
     const { data } = await supabase
       .from("categories")
       .select("*")
-      .neq("forum_id", "codeforum")
+      .eq("forum_id", "prohub")
       .order("order_position");
     setCategories(data || []);
   };

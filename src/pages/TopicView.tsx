@@ -429,9 +429,14 @@ const TopicView = () => {
                     required
                   />
                 </div>
+                {activeBrandId && (
+                  <p className="text-xs text-muted-foreground">
+                    Вы отвечаете от лица активного бренд-аккаунта. Переключите бренд в шапке, чтобы писать от себя.
+                  </p>
+                )}
                 <Button type="submit" disabled={posting}>
                   <Send className="mr-2 h-4 w-4" />
-                  {posting ? "Отправка..." : "Ответить"}
+                  {posting ? "Отправка..." : activeBrandId ? "Ответить от бренда" : "Ответить"}
                 </Button>
               </form>
             </CardContent>

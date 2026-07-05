@@ -227,8 +227,7 @@ const Members = () => {
                       </Avatar>
                       <div className="flex-1 min-w-0">
                         <div className="flex items-center gap-2 flex-wrap">
-                          <StyledUsername username={member.username} userId={member.id} disableMiniProfile className="font-semibold truncate" />
-                          {member.is_verified && <VerifiedBadge />}
+                          <StyledUsername username={member.username} userId={member.id} isVerified={member.is_verified} disableMiniProfile className="font-semibold truncate" />
                           <BannedUserInlineBadge userId={member.id} />
                         </div>
                         <div className="flex items-center gap-2 mt-1 flex-wrap">

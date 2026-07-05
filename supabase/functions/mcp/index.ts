@@ -6,30 +6,64 @@
 import { auth, defineMcp } from "npm:@lovable.dev/mcp-js@0.20.0";
 
 // src/lib/mcp/tools/search-topics.ts
-import { createClient } from "npm:@supabase/supabase-js@^2.81.1";
 import { defineTool } from "npm:@lovable.dev/mcp-js@0.20.0";
 import { z } from "npm:zod@^4.4.3";
+
+// src/lib/mcp/tools/_admin.ts
+import { createClient } from "npm:@supabase/supabase-js@^2.81.1";
+function mcpClient(ctx) {
+  return createClient(
+    globalThis.process.env.SUPABASE_URL,
+    globalThis.process.env.SUPABASE_PUBLISHABLE_KEY,
+    {
+      global: ctx?.getToken ? { headers: { Authorization: `Bearer ${ctx.getToken()}` } } : void 0,
+      auth: { persistSession: false, autoRefreshToken: false }
+    }
+  );
+}
+async function requireAdmin(ctx) {
+  if (!ctx.isAuthenticated()) {
+    return {
+      content: [{ type: "text", text: "MCP \u0434\u043E\u0441\u0442\u0443\u043F \u043E\u0433\u0440\u0430\u043D\u0438\u0447\u0435\u043D: \u0442\u0440\u0435\u0431\u0443\u0435\u0442\u0441\u044F \u0430\u0432\u0442\u043E\u0440\u0438\u0437\u0430\u0446\u0438\u044F." }],
+      isError: true
+    };
+  }
+  const supabase = mcpClient(ctx);
+  const { data } = await supabase.from("user_roles").select("role").eq("user_id", ctx.getUserId()).eq("role", "admin").maybeSingle();
+  if (!data) {
+    return {
+      content: [
+        { type: "text", text: "MCP-\u0441\u0435\u0440\u0432\u0435\u0440 ProHub \u0434\u043E\u0441\u0442\u0443\u043F\u0435\u043D \u0442\u043E\u043B\u044C\u043A\u043E \u0430\u0434\u043C\u0438\u043D\u0438\u0441\u0442\u0440\u0430\u0442\u043E\u0440\u0430\u043C \u043F\u043B\u0430\u0442\u0444\u043E\u0440\u043C\u044B." }
+      ],
+      isError: true
+    };
+  }
+  return null;
+}
+
+// src/lib/mcp/tools/search-topics.ts
 var search_topics_default = defineTool({
   name: "search_topics",
   title: "Search topics",
-  description: "Full-text search for forum topics across ProHub, Code Forum, and FlexDev.",
+  description: "Full-text search for forum topics across ProHub, Code Forum, and FlexDev. Admin-only.",
   inputSchema: {
     query: z.string().min(1).describe("Search text matched against topic titles."),
     forum_id: z.enum(["prohub", "codeforum", "flexdev"]).optional().describe("Restrict results to a specific forum."),
     limit: z.number().int().min(1).max(50).optional().describe("Max results (default 20).")
   },
   annotations: { readOnlyHint: true, idempotentHint: true, openWorldHint: false },
-  handler: async ({ query, forum_id, limit }) => {
-    const supabase = createClient(
-      globalThis.process.env.SUPABASE_URL,
-      globalThis.process.env.SUPABASE_PUBLISHABLE_KEY,
-      { auth: { persistSession: false, autoRefreshToken: false } }
-    );
-    let q = supabase.from("topics").select("id, title, forum_id, category_id, user_id, views, created_at").eq("is_hidden", false).ilike("title", `%${query}%`).order("created_at", { ascending: false }).limit(limit ?? 20);
-    if (forum_id) q = q.eq("forum_id", forum_id);
+  handler: async ({ query, forum_id, limit }, ctx) => {
+    const denied = await requireAdmin(ctx);
+    if (denied) return denied;
+    const supabase = mcpClient(ctx);
+    let q = supabase.from("topics").select("id, title, category_id, user_id, views, created_at").eq("is_hidden", false).ilike("title", `%${query}%`).order("created_at", { ascending: false }).limit(limit ?? 20);
+    if (forum_id) {
+      const { data: cats } = await supabase.from("categories").select("id").eq("forum_id", forum_id);
+      const ids = (cats || []).map((c) => c.id);
+      if (ids.length) q = q.in("category_id", ids);
+    }
     const { data, error } = await q;
-    if (error)
-      return { content: [{ type: "text", text: error.message }], isError: true };
+    if (error) return { content: [{ type: "text", text: error.message }], isError: true };
     return {
       content: [{ type: "text", text: JSON.stringify(data) }],
       structuredContent: { topics: data ?? [] }
@@ -38,25 +72,22 @@ var search_topics_default = defineTool({
 });
 
 // src/lib/mcp/tools/get-topic.ts
-import { createClient as createClient2 } from "npm:@supabase/supabase-js@^2.81.1";
 import { defineTool as defineTool2 } from "npm:@lovable.dev/mcp-js@0.20.0";
 import { z as z2 } from "npm:zod@^4.4.3";
 var get_topic_default = defineTool2({
   name: "get_topic",
   title: "Get topic",
-  description: "Fetch a topic with its posts by topic ID.",
+  description: "Fetch a topic with its posts by topic ID. Admin-only.",
   inputSchema: {
     topic_id: z2.string().uuid().describe("Topic UUID."),
     post_limit: z2.number().int().min(1).max(100).optional()
   },
   annotations: { readOnlyHint: true, idempotentHint: true, openWorldHint: false },
-  handler: async ({ topic_id, post_limit }) => {
-    const supabase = createClient2(
-      globalThis.process.env.SUPABASE_URL,
-      globalThis.process.env.SUPABASE_PUBLISHABLE_KEY,
-      { auth: { persistSession: false, autoRefreshToken: false } }
-    );
-    const { data: topic, error: te } = await supabase.from("topics").select("id, title, content, forum_id, category_id, user_id, views, created_at, is_hidden").eq("id", topic_id).maybeSingle();
+  handler: async ({ topic_id, post_limit }, ctx) => {
+    const denied = await requireAdmin(ctx);
+    if (denied) return denied;
+    const supabase = mcpClient(ctx);
+    const { data: topic, error: te } = await supabase.from("topics").select("id, title, content, category_id, user_id, views, created_at, is_hidden").eq("id", topic_id).maybeSingle();
     if (te) return { content: [{ type: "text", text: te.message }], isError: true };
     if (!topic || topic.is_hidden)
       return { content: [{ type: "text", text: "Topic not found." }], isError: true };
@@ -69,24 +100,21 @@ var get_topic_default = defineTool2({
 });
 
 // src/lib/mcp/tools/list-categories.ts
-import { createClient as createClient3 } from "npm:@supabase/supabase-js@^2.81.1";
 import { defineTool as defineTool3 } from "npm:@lovable.dev/mcp-js@0.20.0";
 import { z as z3 } from "npm:zod@^4.4.3";
 var list_categories_default = defineTool3({
   name: "list_categories",
   title: "List categories",
-  description: "List forum categories for ProHub, Code Forum, or FlexDev.",
+  description: "List forum categories for ProHub, Code Forum, or FlexDev. Admin-only.",
   inputSchema: {
     forum_id: z3.enum(["prohub", "codeforum", "flexdev"]).optional().describe("Filter by forum (defaults to all).")
   },
   annotations: { readOnlyHint: true, idempotentHint: true, openWorldHint: false },
-  handler: async ({ forum_id }) => {
-    const supabase = createClient3(
-      globalThis.process.env.SUPABASE_URL,
-      globalThis.process.env.SUPABASE_PUBLISHABLE_KEY,
-      { auth: { persistSession: false, autoRefreshToken: false } }
-    );
-    let q = supabase.from("categories").select("*").order("position", { ascending: true });
+  handler: async ({ forum_id }, ctx) => {
+    const denied = await requireAdmin(ctx);
+    if (denied) return denied;
+    const supabase = mcpClient(ctx);
+    let q = supabase.from("categories").select("*").order("order_position", { ascending: true });
     if (forum_id) q = q.eq("forum_id", forum_id);
     const { data, error } = await q;
     if (error) return { content: [{ type: "text", text: error.message }], isError: true };
@@ -98,25 +126,22 @@ var list_categories_default = defineTool3({
 });
 
 // src/lib/mcp/tools/list-resources.ts
-import { createClient as createClient4 } from "npm:@supabase/supabase-js@^2.81.1";
 import { defineTool as defineTool4 } from "npm:@lovable.dev/mcp-js@0.20.0";
 import { z as z4 } from "npm:zod@^4.4.3";
 var list_resources_default = defineTool4({
   name: "list_resources",
   title: "List resources",
-  description: "List published resources (guides, tools, downloads) on the platform.",
+  description: "List published resources (guides, tools, downloads). Admin-only.",
   inputSchema: {
     forum_id: z4.enum(["prohub", "codeforum", "flexdev"]).optional(),
     query: z4.string().optional().describe("Optional title filter."),
     limit: z4.number().int().min(1).max(50).optional()
   },
   annotations: { readOnlyHint: true, idempotentHint: true, openWorldHint: false },
-  handler: async ({ forum_id, query, limit }) => {
-    const supabase = createClient4(
-      globalThis.process.env.SUPABASE_URL,
-      globalThis.process.env.SUPABASE_PUBLISHABLE_KEY,
-      { auth: { persistSession: false, autoRefreshToken: false } }
-    );
+  handler: async ({ forum_id, query, limit }, ctx) => {
+    const denied = await requireAdmin(ctx);
+    if (denied) return denied;
+    const supabase = mcpClient(ctx);
     let q = supabase.from("resources").select("id, title, description, forum_id, user_id, downloads, created_at").eq("is_hidden", false).order("created_at", { ascending: false }).limit(limit ?? 20);
     if (forum_id) q = q.eq("forum_id", forum_id);
     if (query) q = q.ilike("title", `%${query}%`);
@@ -130,25 +155,17 @@ var list_resources_default = defineTool4({
 });
 
 // src/lib/mcp/tools/get-me.ts
-import { createClient as createClient5 } from "npm:@supabase/supabase-js@^2.81.1";
 import { defineTool as defineTool5 } from "npm:@lovable.dev/mcp-js@0.20.0";
 var get_me_default = defineTool5({
   name: "get_me",
   title: "Get my profile",
-  description: "Return the signed-in user's profile (username, reputation, roles).",
+  description: "Return the signed-in admin's profile (username, reputation, roles). Admin-only.",
   inputSchema: {},
   annotations: { readOnlyHint: true, idempotentHint: true, openWorldHint: false },
   handler: async (_input, ctx) => {
-    if (!ctx.isAuthenticated())
-      return { content: [{ type: "text", text: "Not authenticated" }], isError: true };
-    const supabase = createClient5(
-      globalThis.process.env.SUPABASE_URL,
-      globalThis.process.env.SUPABASE_PUBLISHABLE_KEY,
-      {
-        global: { headers: { Authorization: `Bearer ${ctx.getToken()}` } },
-        auth: { persistSession: false, autoRefreshToken: false }
-      }
-    );
+    const denied = await requireAdmin(ctx);
+    if (denied) return denied;
+    const supabase = mcpClient(ctx);
     const userId = ctx.getUserId();
     const [{ data: profile }, { data: rep }, { data: roles }] = await Promise.all([
       supabase.from("profiles").select("*").eq("id", userId).maybeSingle(),
@@ -163,29 +180,21 @@ var get_me_default = defineTool5({
 });
 
 // src/lib/mcp/tools/create-post.ts
-import { createClient as createClient6 } from "npm:@supabase/supabase-js@^2.81.1";
 import { defineTool as defineTool6 } from "npm:@lovable.dev/mcp-js@0.20.0";
 import { z as z5 } from "npm:zod@^4.4.3";
 var create_post_default = defineTool6({
   name: "create_post",
   title: "Reply to a topic",
-  description: "Post a reply in a forum topic as the signed-in user.",
+  description: "Post a reply in a forum topic as the signed-in admin. Admin-only.",
   inputSchema: {
     topic_id: z5.string().uuid().describe("Topic UUID to reply in."),
     content: z5.string().min(1).describe("Reply body (BBCode/text).")
   },
   annotations: { readOnlyHint: false, destructiveHint: false, openWorldHint: false },
   handler: async ({ topic_id, content }, ctx) => {
-    if (!ctx.isAuthenticated())
-      return { content: [{ type: "text", text: "Not authenticated" }], isError: true };
-    const supabase = createClient6(
-      globalThis.process.env.SUPABASE_URL,
-      globalThis.process.env.SUPABASE_PUBLISHABLE_KEY,
-      {
-        global: { headers: { Authorization: `Bearer ${ctx.getToken()}` } },
-        auth: { persistSession: false, autoRefreshToken: false }
-      }
-    );
+    const denied = await requireAdmin(ctx);
+    if (denied) return denied;
+    const supabase = mcpClient(ctx);
     const { data, error } = await supabase.from("posts").insert({ topic_id, content, user_id: ctx.getUserId() }).select().maybeSingle();
     if (error) return { content: [{ type: "text", text: error.message }], isError: true };
     return {
@@ -199,9 +208,9 @@ var create_post_default = defineTool6({
 var projectRef = "fkveoqzztgwdeayaqixv";
 var mcp_default = defineMcp({
   name: "prohub-mcp",
-  title: "ProHub MCP",
-  version: "0.1.0",
-  instructions: "Tools for the ProHub platform (ProHub, Code Forum, FlexDev). Read topics, categories, and resources without auth; sign in to fetch your profile or reply in topics.",
+  title: "ProHub MCP (Admin)",
+  version: "0.2.0",
+  instructions: "Admin-only MCP tools for the ProHub platform (ProHub, Code Forum, FlexDev). All tools require the caller to hold the 'admin' role in this app. Non-admins will receive an authorization error.",
   auth: auth.oauth.issuer({
     issuer: `https://${projectRef}.supabase.co/auth/v1`,
     acceptedAudiences: "authenticated"
