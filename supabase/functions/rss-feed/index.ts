@@ -43,68 +43,79 @@ serve(async (req) => {
       return new Response(feed, { headers: corsHeaders, status: 200 });
     }
 
-    // Fetch latest topics with user profiles and category info
-    const { data: topics, error: topicsError } = await supabase
-      .from('topics')
-      .select(`
-        id,
-        title,
-        content,
-        created_at,
-        updated_at,
-        views,
-        profiles!topics_user_id_fkey (username),
-        categories!topics_category_id_fkey (name, slug)
-      `)
-      .eq('is_hidden', false)
-      .order('created_at', { ascending: false })
-      .limit(50);
+    // Optional filters for the main-forum feed:
+    //   ?type=topics|resources|videos  (default: all)
+    //   ?category=<slug>               (limits topics/resources to one category)
+    //   ?forum=prohub|codeforum|flexdev (defaults to prohub only for the classic feed)
+    const typeFilter = (url.searchParams.get('type') || '').toLowerCase();
+    const catFilter = url.searchParams.get('category');
+    const forumFilter = (url.searchParams.get('forum_id') || 'prohub').toLowerCase();
 
-    if (topicsError) {
-      console.error('Error fetching topics:', topicsError);
+    // Resolve category id from slug when provided
+    let categoryId: string | null = null;
+    if (catFilter) {
+      const { data: cat } = await supabase
+        .from('categories')
+        .select('id')
+        .eq('slug', catFilter)
+        .maybeSingle();
+      categoryId = cat?.id ?? null;
+    }
+
+    // Categories that belong to the requested forum (used to scope resources/topics)
+    const { data: forumCats } = await supabase
+      .from('categories')
+      .select('id')
+      .eq('forum_id', forumFilter);
+    const forumCategoryIds = (forumCats || []).map((c: any) => c.id);
+
+    // Fetch latest topics with user profiles and category info
+    let topics: any[] = [];
+    if (!typeFilter || typeFilter === 'topics') {
+      let tq: any = supabase
+        .from('topics')
+        .select(`id, title, content, created_at, updated_at, views,
+          profiles!topics_user_id_fkey (username),
+          categories!topics_category_id_fkey (name, slug)`)
+        .eq('is_hidden', false)
+        .order('created_at', { ascending: false })
+        .limit(50);
+      if (categoryId) tq = tq.eq('category_id', categoryId);
+      else if (forumCategoryIds.length) tq = tq.in('category_id', forumCategoryIds);
+      const { data: t, error: te } = await tq;
+      if (te) console.error('topics error', te);
+      topics = t || [];
     }
 
     // Fetch latest resources
-    const { data: resources, error: resourcesError } = await supabase
-      .from('resources')
-      .select(`
-        id,
-        title,
-        description,
-        created_at,
-        updated_at,
-        resource_type,
-        downloads,
-        rating,
-        profiles!resources_user_id_fkey (username)
-      `)
-      .eq('is_hidden', false)
-      .order('created_at', { ascending: false })
-      .limit(50);
-
-    if (resourcesError) {
-      console.error('Error fetching resources:', resourcesError);
+    let resources: any[] = [];
+    if (!typeFilter || typeFilter === 'resources') {
+      let rq: any = supabase
+        .from('resources')
+        .select(`id, title, description, created_at, updated_at, resource_type, downloads, rating,
+          profiles!resources_user_id_fkey (username)`)
+        .eq('is_hidden', false)
+        .order('created_at', { ascending: false })
+        .limit(50);
+      // resources have their own forum_id column
+      rq = rq.eq('forum_id', forumFilter);
+      const { data: r, error: re } = await rq;
+      if (re) console.error('resources error', re);
+      resources = r || [];
     }
 
-    // Fetch latest videos
-    const { data: videos, error: videosError } = await supabase
-      .from('videos')
-      .select(`
-        id,
-        title,
-        description,
-        created_at,
-        updated_at,
-        views,
-        likes,
-        profiles!videos_user_id_fkey (username)
-      `)
-      .eq('is_hidden', false)
-      .order('created_at', { ascending: false })
-      .limit(50);
-
-    if (videosError) {
-      console.error('Error fetching videos:', videosError);
+    // Fetch latest videos (only for prohub or when no forum filter is tight)
+    let videos: any[] = [];
+    if ((!typeFilter || typeFilter === 'videos') && forumFilter === 'prohub' && !categoryId) {
+      const { data: v, error: ve } = await supabase
+        .from('videos')
+        .select(`id, title, description, created_at, updated_at, views, likes,
+          profiles!videos_user_id_fkey (username)`)
+        .eq('is_hidden', false)
+        .order('created_at', { ascending: false })
+        .limit(50);
+      if (ve) console.error('videos error', ve);
+      videos = v || [];
     }
 
     // Combine all content items with type
