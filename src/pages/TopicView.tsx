@@ -37,10 +37,17 @@ interface Post {
   content: string;
   created_at: string;
   user_id: string;
+  author_brand_id?: string | null;
   profiles: {
     username: string;
     avatar_url: string | null;
   };
+  brand_accounts?: {
+    name: string;
+    handle: string;
+    avatar_url: string | null;
+    is_verified: boolean;
+  } | null;
 }
 
 const TopicView = () => {
