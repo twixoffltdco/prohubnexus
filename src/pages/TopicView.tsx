@@ -153,6 +153,12 @@ const TopicView = () => {
           profiles (
             username,
             avatar_url
+          ),
+          brand_accounts:author_brand_id (
+            name,
+            handle,
+            avatar_url,
+            is_verified
           )
         `)
         .eq("topic_id", id)
