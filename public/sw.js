@@ -1,5 +1,5 @@
-// ProHub Nexus Service Worker v3.4 - Force Update + cross-domain handoff
-const SW_VERSION = "v3.6";
+// ProHub Nexus Service Worker - Force Update + cross-domain handoff
+const SW_VERSION = "v3.8";
 const CACHE_NAME = "prohub-" + SW_VERSION;
 
 // Install - skip waiting to activate immediately  
