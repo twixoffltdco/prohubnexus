@@ -114,6 +114,7 @@ const AppLayout = ({ user }: { user: any }) => {
           <Route path="/auth/handoff" element={<AuthHandoff />} />
           <Route path="/brands" element={<BrandAccounts />} />
           <Route path="/brands/all" element={<BrandDirectory />} />
+          <Route path="/brands/rating" element={<BrandRating />} />
           <Route path="/business" element={<BusinessLanding />} />
           <Route path="/brand/:handle" element={<BrandProfile />} />
           <Route path="/random" element={<RandomTopic />} />
