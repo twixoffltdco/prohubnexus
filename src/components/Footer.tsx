@@ -19,6 +19,12 @@ const Footer = () => {
             <Link to="/members" className="hover:text-foreground transition-colors">
               Участники
             </Link>
+            <Link to="/brands/all" className="hover:text-foreground transition-colors">
+              Бренды
+            </Link>
+            <Link to="/brands/rating" className="hover:text-foreground transition-colors font-medium text-yellow-500">
+              🏆 Рейтинг брендов
+            </Link>
             <Link to="/codeforum" className="hover:text-foreground transition-colors">
               Code Forum
             </Link>
