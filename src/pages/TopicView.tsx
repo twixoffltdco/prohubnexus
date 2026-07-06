@@ -356,20 +356,39 @@ const TopicView = () => {
 
         {/* Posts */}
         <div className="space-y-4 mb-6">
-          {posts.map((post) => (
+          {posts.map((post) => {
+            const brand = post.brand_accounts;
+            const displayName = brand?.name || post.profiles?.username;
+            const displayAvatar = brand?.avatar_url || post.profiles?.avatar_url;
+            const brandHandle = brand?.handle;
+            return (
             <Card key={post.id}>
               <CardContent className="pt-4 sm:pt-6">
-                <BannedUserBadge userId={post.user_id} className="mb-3" />
+                {!brand && <BannedUserBadge userId={post.user_id} className="mb-3" />}
                 <div className="flex items-start gap-3">
                   <Avatar className="h-8 w-8 sm:h-10 sm:w-10 flex-shrink-0">
+                    {displayAvatar && <AvatarImage src={displayAvatar} />}
                     <AvatarFallback className="bg-secondary text-xs sm:text-sm">
-                      {post.profiles?.username?.[0]?.toUpperCase()}
+                      {displayName?.[0]?.toUpperCase()}
                     </AvatarFallback>
                   </Avatar>
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center gap-2 mb-2 flex-wrap">
-                      <UserLink username={post.profiles?.username} avatarUrl={post.profiles?.avatar_url} />
-                      <BannedUserInlineBadge userId={post.user_id} />
+                      {brand ? (
+                        <>
+                          <a href={`/brand/${brandHandle}`} className="font-semibold hover:underline text-primary">
+                            {brand.name}
+                          </a>
+                          <span className="text-[10px] px-1.5 py-0.5 rounded bg-primary/10 text-primary uppercase tracking-wide">Бренд</span>
+                          {brand.is_verified && <span className="text-[10px] text-primary">✓</span>}
+                          <span className="text-xs text-muted-foreground">от @{post.profiles?.username}</span>
+                        </>
+                      ) : (
+                        <>
+                          <UserLink username={post.profiles?.username} avatarUrl={post.profiles?.avatar_url} />
+                          <BannedUserInlineBadge userId={post.user_id} />
+                        </>
+                      )}
                       <span className="text-xs text-muted-foreground">
                         {formatDistanceToNow(new Date(post.created_at), { addSuffix: true, locale: ru })}
                       </span>
@@ -403,12 +422,13 @@ const TopicView = () => {
                         />
                       )}
                     </div>
-                    <UserSignature userId={post.user_id} />
+                    {!brand && <UserSignature userId={post.user_id} />}
                   </div>
                 </div>
               </CardContent>
             </Card>
-          ))}
+            );
+          })}
         </div>
 
         {/* Reply Form */}
