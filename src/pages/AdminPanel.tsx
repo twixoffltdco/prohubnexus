@@ -770,6 +770,10 @@ const AdminPanel = () => {
             </Card>
           </TabsContent>
 
+          <TabsContent value="brands" className="space-y-4">
+            <AdminBrandsTab />
+          </TabsContent>
+
           <TabsContent value="sections" className="space-y-4">
             <AdminSectionsTab />
           </TabsContent>
