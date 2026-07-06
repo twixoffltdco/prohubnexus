@@ -48,6 +48,7 @@ import AdminSettingsTab from "@/components/admin/AdminSettingsTab";
 import AdminInactiveRenameTab from "@/components/admin/AdminInactiveRenameTab";
 import AdminSubForumsTab from "@/components/admin/AdminSubForumsTab";
 import AdminAuditLogTab from "@/components/admin/AdminAuditLogTab";
+import AdminBrandsTab from "@/components/admin/AdminBrandsTab";
 
 interface User {
   id: string;
@@ -430,6 +431,10 @@ const AdminPanel = () => {
                 </Badge>
               )}
             </TabsTrigger>
+            <TabsTrigger value="brands" className="gap-1">
+              <BadgeCheck className="h-4 w-4" />
+              <span className="hidden sm:inline">Бренды</span>
+            </TabsTrigger>
             <TabsTrigger value="sections" className="gap-1">
               <FolderOpen className="h-4 w-4" />
               <span className="hidden sm:inline">Разделы</span>
@@ -763,6 +768,10 @@ const AdminPanel = () => {
                 </div>
               </CardContent>
             </Card>
+          </TabsContent>
+
+          <TabsContent value="brands" className="space-y-4">
+            <AdminBrandsTab />
           </TabsContent>
 
           <TabsContent value="sections" className="space-y-4">

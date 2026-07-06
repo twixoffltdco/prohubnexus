@@ -66,6 +66,7 @@ import SubForumSearchPage from "./pages/SubForumSearchPage";
 import AuthHandoff from "./pages/AuthHandoff";
 import BrandAccounts from "./pages/BrandAccounts";
 import BrandDirectory from "./pages/BrandDirectory";
+import BrandRating from "./pages/BrandRating";
 import BrandProfile from "./pages/BrandProfile";
 import BusinessLanding from "./pages/BusinessLanding";
 import RandomTopic from "./pages/RandomTopic";
@@ -113,6 +114,7 @@ const AppLayout = ({ user }: { user: any }) => {
           <Route path="/auth/handoff" element={<AuthHandoff />} />
           <Route path="/brands" element={<BrandAccounts />} />
           <Route path="/brands/all" element={<BrandDirectory />} />
+          <Route path="/brands/rating" element={<BrandRating />} />
           <Route path="/business" element={<BusinessLanding />} />
           <Route path="/brand/:handle" element={<BrandProfile />} />
           <Route path="/random" element={<RandomTopic />} />

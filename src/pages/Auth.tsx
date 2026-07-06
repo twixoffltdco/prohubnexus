@@ -237,13 +237,26 @@ const Auth = () => {
     try {
       let loginEmail = loginIdentifier.trim();
 
-      // If not an email, look up by username (supports Cyrillic)
+      // If not an email, look up by username (supports Cyrillic, exact + case-insensitive)
       if (!loginEmail.includes("@")) {
-        const { data: profileData } = await supabase
+        let profileData: { id: string } | null = null;
+        // Try exact match first (safer with special chars)
+        const { data: exact } = await supabase
           .from("profiles")
           .select("id")
-          .ilike("username", loginEmail)
+          .eq("username", loginEmail)
           .maybeSingle();
+        profileData = exact as any;
+        if (!profileData) {
+          // Fallback: case-insensitive with escaped wildcards
+          const escaped = loginEmail.replace(/[%_\\]/g, "\\$&");
+          const { data: ilikeMatch } = await supabase
+            .from("profiles")
+            .select("id")
+            .ilike("username", escaped)
+            .maybeSingle();
+          profileData = ilikeMatch as any;
+        }
 
         if (!profileData) {
           toast({ title: "Пользователь не найден", description: "Проверьте логин или email", variant: "destructive" });
