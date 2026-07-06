@@ -431,6 +431,9 @@ const AdminPanel = () => {
                 </Badge>
               )}
             </TabsTrigger>
+            <TabsTrigger value="brands" className="gap-1">
+              <BadgeCheck className="h-4 w-4" />
+              <span className="hidden sm:inline">Бренды</span>
             <TabsTrigger value="sections" className="gap-1">
               <FolderOpen className="h-4 w-4" />
               <span className="hidden sm:inline">Разделы</span>
